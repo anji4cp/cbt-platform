@@ -20,9 +20,64 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth', 'verified'])->name('dashboard');
+Route::fallback(function () {
+    if (auth()->check()) {
+        if (auth()->user()->role === 'super_admin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        if (auth()->user()->role === 'admin_school') {
+            return redirect()->route('school.dashboard');
+        }
+    }
+
+    if (auth()->guard('student')->check()) {
+        return redirect()->route('student.exams');
+    }
+
+    return redirect()->route('login');
+});
+
+Route::get('/', function () {
+
+    // ===============================
+    // BELUM LOGIN
+    // ===============================
+    if (
+        !auth()->check() &&
+        !auth()->guard('student')->check()
+    ) {
+        return redirect()->route('student.login');
+    }
+
+    // ===============================
+    // SISWA
+    // ===============================
+    if (auth()->guard('student')->check()) {
+        return redirect()->route('student.exams');
+    }
+
+    // ===============================
+    // ADMIN / SUPER ADMIN
+    // ===============================
+    $user = auth()->user();
+
+    if ($user) {
+        if ($user->role === 'super_admin') {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        if ($user->role === 'admin_school') {
+            return redirect()->route('school.dashboard');
+        }
+    }
+
+    return redirect()->route('login');
+});
+
 
 Route::middleware(['auth','role:super_admin'])
     ->prefix('super-admin')
@@ -30,7 +85,7 @@ Route::middleware(['auth','role:super_admin'])
         Route::get('/dashboard', 
             [SuperDashboardController::class, 'index']
         )->name('superadmin.dashboard');
-        Route::resource('schools', SchoolController::class);
+        Route::resource('schools', SchoolController::class)->except(['show']);
         Route::get('monitoring', [MonitoringController::class, 'index'])->name('super.monitoring');
         Route::get('/schools/{school}/admin/create', [SchoolAdminController::class, 'create'])->name('schools.admin.create');
         Route::post('/schools/{school}/admin', [SchoolAdminController::class, 'store'])->name('schools.admin.store');

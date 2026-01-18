@@ -47,7 +47,7 @@
                 <td class="px-4 py-3 text-center text-sm text-gray-700">
                     @if($school->admins->count())
                         @foreach($school->admins as $admin)
-                            <div class="font-mono text-indigo-600">
+                            <div class="font-medium text-gray-600">
                                 {{ $admin->email }}
                             </div>
                         @endforeach

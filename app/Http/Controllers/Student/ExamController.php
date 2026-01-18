@@ -145,8 +145,9 @@ class ExamController extends Controller
 
         // kalau sudah lolos token → langsung ujian
         if ($session && $session->token_verified) {
-            return redirect()->route('student.exam.start', $exam->id);
+            return redirect()->route('student.exam.real', $exam->id);
         }
+
 
         // kalau ujian TIDAK pakai token
         if (! $exam->token) {
@@ -158,19 +159,25 @@ class ExamController extends Controller
 
     public function verifyToken(Request $request, Exam $exam)
     {
-        $request->validate([
-            'token' => 'required'
-        ]);
+        $request->validate(['token' => 'required']);
 
         if ($exam->token !== $request->token) {
-            return back()->withErrors([
-                'token' => 'Token ujian salah'
-            ]);
+            return back()->withErrors(['token' => 'Token ujian salah']);
         }
 
-        // ✔️ TOKEN BENAR → LANGSUNG MASUK UJIAN
+        ExamSession::updateOrCreate(
+            [
+                'exam_id'    => $exam->id,
+                'student_id' => auth()->id(),
+            ],
+            [
+                'token_verified' => true
+            ]
+        );
+
         return redirect()->route('student.exam.real', $exam->id);
     }
+
 
 
     
@@ -184,26 +191,54 @@ class ExamController extends Controller
 
         $exam = Exam::findOrFail($id);
 
-        // ⛔ WAJIB TOKEN SETIAP MASUK
+        // pakai token → ke form token
         if ($exam->token) {
             return redirect()->route('student.exam.token.form', $exam->id);
         }
-        
+
+        // tidak pakai token → langsung ujian
+        return redirect()->route('student.exam.real', $exam->id);
     }
+
 
     public function startReal(Exam $exam)
     {
         $student = Auth::guard('student')->user();
         abort_if(! $student, 403);
 
-        if ($student->school->status === 'suspend') {
+        $school = $student->school;
+
+        if (! $school) {
             Auth::guard('student')->logout();
+
             return redirect('/student/login')
-                ->with('error', 'Sekolah sedang disuspend.');
+                ->withErrors([
+                    'username' => 'Sekolah tidak ditemukan. Hubungi admin.'
+                ]);
+        }
+
+        if ($school->status === 'suspend') {
+            Auth::guard('student')->logout();
+
+            return redirect('/student/login')
+                ->withErrors([
+                    'username' => 'Sekolah sedang disuspend.'
+                ]);
+        }
+
+        if (
+            $school->status === 'expired' ||
+            ($school->expired_at && now()->greaterThan($school->expired_at))
+        ) {
+            Auth::guard('student')->logout();
+
+            return redirect('/student/login')
+                ->withErrors([
+                    'username' => 'Akses ujian telah berakhir.'
+                ]);
         }
 
 
-        $exam = Exam::findOrFail($exam->id);
         abort_if($exam->school_id !== $student->school_id, 403);
         abort_if(! $exam->is_active, 403);
 
@@ -295,6 +330,11 @@ class ExamController extends Controller
             return response()->json(['status' => 'locked']);
         }
 
+        if ($exam->token && ! $session->token_verified) {
+            return response()->json(['status' => 'token_required'], 403);
+        }
+
+
         // =============================
         // 🔐 DEVICE LOCK (FIX PALSU)
         // =============================
@@ -338,6 +378,11 @@ class ExamController extends Controller
         if ($session->submitted_at) {
             return response()->json(['status' => 'locked']);
         }
+
+        if ($exam->token && ! $session->token_verified) {
+            return response()->json(['status' => 'token_required'], 403);
+        }
+
 
         // ===============================
         // ⏱️ VALIDASI MINIMAL WAKTU SUBMIT

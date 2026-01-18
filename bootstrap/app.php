@@ -25,7 +25,52 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.school.active' => \App\Http\Middleware\EnsureSchoolActive::class,
         ]);
     })
-    ->withExceptions(function ($exceptions) {
-        //
+    ->withExceptions(function (Exceptions $exceptions) {
+
+        $exceptions->renderable(function (
+            \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e,
+            $request
+        ) {
+
+            // ===============================
+            // BELUM LOGIN → LOGIN
+            // ===============================
+            if (
+                !auth()->check() &&
+                !auth()->guard('student')->check()
+            ) {
+                return redirect()->route('login');
+            }
+
+            // ===============================
+            // STUDENT
+            // ===============================
+            if (auth()->guard('student')->check()) {
+                return redirect()->route('student.exams');
+            }
+
+            // ===============================
+            // ADMIN / SUPER ADMIN
+            // ===============================
+            $user = auth()->user();
+
+            if ($user) {
+
+                if ($user->role === 'super_admin') {
+                    return redirect()->route('superadmin.dashboard');
+                }
+
+                if ($user->role === 'admin_school') {
+                    return redirect()->route('school.dashboard');
+                }
+            }
+
+            // ===============================
+            // DEFAULT
+            // ===============================
+            return redirect()->route('login');
+        });
+
     })
+
     ->create();

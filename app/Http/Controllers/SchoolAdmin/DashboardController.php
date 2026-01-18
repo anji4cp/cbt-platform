@@ -14,14 +14,16 @@ class DashboardController extends Controller
     {
         $schoolId = auth()->user()->school_id;
 
-        /* ===============================
-           SERVER ID PUBLIK
-        =============================== */
-        $serverId = \App\Models\School::where('id', $schoolId)
-            ->value('school_id');
+        // ✅ WAJIB ADA
+        $school = \App\Models\School::findOrFail($schoolId);
 
         /* ===============================
-           STATISTIK ATAS
+        SERVER ID PUBLIK
+        =============================== */
+        $serverId = $school->school_id;
+
+        /* ===============================
+        STATISTIK ATAS
         =============================== */
         $totalStudents = Student::where('school_id', $schoolId)->count();
 
@@ -48,7 +50,7 @@ class DashboardController extends Controller
             ->count();
 
         /* ===============================
-           FILTER KELAS
+        FILTER KELAS
         =============================== */
         $classes = Student::where('school_id', $schoolId)
             ->select('class')
@@ -59,7 +61,7 @@ class DashboardController extends Controller
         $selectedClass = $request->get('class');
 
         /* ===============================
-           DATA SISWA + STATUS REAL
+        DATA SISWA + STATUS REAL
         =============================== */
         $students = Student::where('school_id', $schoolId)
             ->when($selectedClass, fn ($q) => $q->where('class', $selectedClass))
@@ -68,7 +70,6 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($student) use ($schoolId) {
 
-                // 🔥 SESSION TERAKHIR DARI EXAM SEKOLAH INI
                 $session = ExamSession::where('student_id', $student->id)
                     ->whereHas('exam', fn ($q) => $q->where('school_id', $schoolId))
                     ->latest()
@@ -90,6 +91,7 @@ class DashboardController extends Controller
             });
 
         return view('school_admin.dashboard', compact(
+            'school',
             'serverId',
             'totalStudents',
             'activeStudents',
@@ -102,4 +104,5 @@ class DashboardController extends Controller
             'selectedClass'
         ));
     }
+
 }
