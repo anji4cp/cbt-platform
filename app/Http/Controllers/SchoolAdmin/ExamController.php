@@ -5,13 +5,13 @@ namespace App\Http\Controllers\SchoolAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use App\Helpers\DriveHelper;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
 use App\Models\ExamClass;
 use App\Models\ExamPackage;
 use App\Models\User;
+use Illuminate\Validation\Rule; // ✅ DITAMBAH
+use Illuminate\Database\QueryException; // ✅ DITAMBAH
 
 class ExamController extends Controller
 {
@@ -34,15 +34,13 @@ class ExamController extends Controller
 
     public function store(Request $request)
     {
-        $user = User::find(auth()->id());
-
-        if (! $user || ! $user->school_id) {
-            dd('USER TIDAK TERIKAT SEKOLAH', $user);
-        }
-
         $request->validate([
             'subject' => 'required|string',
-            'token' => 'required|string',
+            'token' => [
+                'required',
+                'string',
+                Rule::unique('exams', 'token'), // ✅ TOKEN UNIK
+            ],
             'total_questions' => 'required|integer|min:1',
             'duration_minutes' => 'required|integer|min:1',
             'min_submit_minutes' => 'required|integer|min:0',
@@ -53,46 +51,51 @@ class ExamController extends Controller
             'packages.*.answer_key' => 'required|string',
         ]);
 
-        DB::transaction(function () use ($request) {
+        try {
+            DB::transaction(function () use ($request) {
 
-        $exam = Exam::create([
-            'school_id' => auth()->user()->school_id,
-            'subject' => $request->subject,
-            'token' => $request->token,
-            'total_questions' => $request->total_questions,
-            'duration_minutes' => $request->duration_minutes,
-            'min_submit_minutes' => $request->min_submit_minutes,
-            'show_score' => $request->boolean('show_result'),
-            'is_active' => false,
-        ]);
+                $exam = Exam::create([
+                    'school_id' => auth()->user()->school_id,
+                    'subject' => $request->subject,
+                    'token' => strtoupper($request->token), // ✅ NORMALISASI
+                    'total_questions' => $request->total_questions,
+                    'duration_minutes' => $request->duration_minutes,
+                    'min_submit_minutes' => $request->min_submit_minutes,
+                    'show_score' => $request->boolean('show_result'),
+                    'is_active' => false,
+                ]);
 
-        // ✅ SIMPAN KELAS
-        foreach ($request->classes as $class) {
-            ExamClass::create([
-                'exam_id' => $exam->id,
-                'class_name' => $class,
-            ]);
+                foreach ($request->classes as $class) {
+                    ExamClass::create([
+                        'exam_id' => $exam->id,
+                        'class_name' => $class,
+                    ]);
+                }
+
+                foreach ($request->packages as $pkg) {
+                    ExamPackage::create([
+                        'exam_id' => $exam->id,
+                        'package_code' => strtoupper($pkg['code']),
+                        'pdf_url' => $pkg['pdf_url'],
+                        'answer_key' => json_encode(
+                            array_map(
+                                'trim',
+                                explode(',', strtoupper($pkg['answer_key']))
+                            )
+                        ),
+                    ]);
+                }
+            });
+        } catch (QueryException $e) {
+            if ($e->getCode() == 23505) { // ✅ DOUBLE SAFETY
+                return back()->withErrors([
+                    'token' => 'Token ujian sudah digunakan.',
+                ]);
+            }
+            throw $e;
         }
 
-        // 🔥 WAJIB ADA: SIMPAN PAKET SOAL
-        foreach ($request->packages as $pkg) {
-
-            ExamPackage::create([
-                'exam_id' => $exam->id,
-                'package_code' => $pkg['code'], // A / B / C
-                'pdf_url' => $pkg['pdf_url'],
-                'answer_key' => json_encode(
-                    array_map(
-                        'trim',
-                        explode(',', strtoupper($pkg['answer_key']))
-                    )
-                ),
-            ]);
-        }
-    });
-
-
-        return redirect()->route('exams.index')->with('success', 'Ujian berhasil dibuat');
+        return redirect()->route('school.exams.index')->with('success', 'Ujian berhasil dibuat');
     }
 
     public function edit(Exam $exam)
@@ -125,7 +128,11 @@ class ExamController extends Controller
 
         $request->validate([
             'subject' => 'required|string',
-            'token' => 'required|string',
+            'token' => [
+                'required',
+                'string',
+                Rule::unique('exams', 'token')->ignore($exam->id), // ✅ IGNORE ID SENDIRI
+            ],
             'total_questions' => 'required|integer|min:1',
             'duration_minutes' => 'required|integer|min:1',
             'min_submit_minutes' => 'required|integer|min:0',
@@ -136,46 +143,51 @@ class ExamController extends Controller
             'packages.*.answer_key' => 'required|string',
         ]);
 
-        DB::transaction(function () use ($request, $exam) {
+        try {
+            DB::transaction(function () use ($request, $exam) {
 
-            // UPDATE EXAM
-            $exam->update([
-                'subject' => $request->subject,
-                'token' => $request->token,
-                'total_questions' => $request->total_questions,
-                'duration_minutes' => $request->duration_minutes,
-                'min_submit_minutes' => $request->min_submit_minutes,
-                'show_score' => $request->boolean('show_result'),
-            ]);
+                $exam->update([
+                    'subject' => $request->subject,
+                    'token' => strtoupper($request->token), // ✅ NORMALISASI
+                    'total_questions' => $request->total_questions,
+                    'duration_minutes' => $request->duration_minutes,
+                    'min_submit_minutes' => $request->min_submit_minutes,
+                    'show_score' => $request->boolean('show_result'),
+                ]);
 
-            // SYNC KELAS (HAPUS → INSERT ULANG)
-            ExamClass::where('exam_id', $exam->id)->delete();
+                ExamClass::where('exam_id', $exam->id)->delete();
+                foreach ($request->classes as $class) {
+                    ExamClass::create([
+                        'exam_id' => $exam->id,
+                        'class_name' => $class,
+                    ]);
+                }
 
-            foreach ($request->classes as $class) {
-                ExamClass::create([
-                    'exam_id' => $exam->id,
-                    'class_name' => $class,
+                ExamPackage::where('exam_id', $exam->id)->delete();
+                foreach ($request->packages as $pkg) {
+                    ExamPackage::create([
+                        'exam_id' => $exam->id,
+                        'package_code' => strtoupper($pkg['code']),
+                        'pdf_url' => $pkg['pdf_url'],
+                        'answer_key' => json_encode(
+                            array_map(
+                                'trim',
+                                explode(',', strtoupper($pkg['answer_key']))
+                            )
+                        ),
+                    ]);
+                }
+            });
+        } catch (QueryException $e) {
+            if ($e->getCode() == 23505) {
+                return back()->withErrors([
+                    'token' => 'Token ujian sudah digunakan.',
                 ]);
             }
+            throw $e;
+        }
 
-            // SYNC PAKET (HAPUS → INSERT ULANG)
-            ExamPackage::where('exam_id', $exam->id)->delete();
-
-            foreach ($request->packages as $pkg) {
-                ExamPackage::create([
-                    'exam_id' => $exam->id,
-                    'package_code' => $pkg['code'],
-                    'pdf_url' => $pkg['pdf_url'],
-                    'answer_key' => json_encode(
-                        array_map('trim', explode(',', strtoupper($pkg['answer_key'])))
-                    ),
-                ]);
-            }
-        });
-
-        return redirect()
-            ->route('exams.index')
-            ->with('success', 'Ujian berhasil diperbarui');
+        return redirect()->route('school.exams.index')->with('success', 'Ujian berhasil diperbarui');
     }
 
     public function toggle(Exam $exam)
@@ -191,10 +203,8 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam)
     {
-        // Pastikan hanya sekolah sendiri
         abort_if($exam->school_id !== auth()->user()->school_id, 403);
 
-        // Optional: cegah hapus jika sedang aktif
         if ($exam->is_active) {
             return back()->with('error', 'Ujian masih aktif, nonaktifkan dulu.');
         }
@@ -203,5 +213,4 @@ class ExamController extends Controller
 
         return back()->with('success', 'Ujian berhasil dihapus.');
     }
-
 }

@@ -23,7 +23,7 @@
 
 <div class="bg-white rounded-xl shadow overflow-x-auto">
     <table class="w-full text-sm">
-        <thead class="bg-slate-100 text-slate-600">
+        <thead class="bg-slate-200 text-slate-800">
             <tr>
                 <th class="px-4 py-3 text-left">Nama Sekolah</th>
                 <th class="px-4 py-3 text-center">School ID</th>
@@ -66,7 +66,7 @@
                     </span>
                 </td>
 
-                <td class="px-4 py-2 text-center text-sm">
+                <td class="px-4 py-2 text-center font-medium text-gray-600">
                     @if($school->expired_at)
                         @php
                             $expiredDate = \Carbon\Carbon::parse($school->expired_at)->startOfDay();

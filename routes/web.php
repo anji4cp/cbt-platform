@@ -50,7 +50,7 @@ Route::get('/', function () {
         !auth()->check() &&
         !auth()->guard('student')->check()
     ) {
-        return redirect()->route('student.login');
+        return redirect()->route('login');
     }
 
     // ===============================
@@ -111,8 +111,13 @@ Route::middleware(['auth', 'role:admin_school', 'school.scope','ensure.school.ac
         Route::get('students/template', [StudentController::class, 'downloadTemplate'])->name('students.template');
 
         // UJIAN
-        Route::resource('exams', ExamController::class);
-        Route::patch('exams/{exam}/toggle', [ExamController::class, 'toggle'])->name('exams.toggle');
+        Route::resource('exams', SchoolExamController::class);
+        Route::patch('exams/{exam}/toggle', [SchoolExamController::class, 'toggle'])->name('exams.toggle');
+        Route::get('/school-admin/exams/check-token', function () {return response()->json([
+        'exists' => \App\Models\Exam::where('token', request('token'))->exists()
+        ]);
+});
+
 
         // LAPORAN
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
