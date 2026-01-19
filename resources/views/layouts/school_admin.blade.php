@@ -4,150 +4,119 @@
     <meta charset="UTF-8">
     <title>Admin Sekolah - CBT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     @vite('resources/css/app.css')
 </head>
-<body class="bg-slate-100">
 
-<div class="flex min-h-screen">
+<body class="bg-slate-100 overflow-hidden">
 
-    <!-- SIDEBAR -->
-    <aside id="sidebar"
-           class="w-64 bg-gradient-to-b from-slate-900 to-slate-800
-                  text-slate-200 p-5 transition-all duration-300">
+<!-- ================= SIDEBAR ================= -->
+<aside
+    id="sidebar"
+    class="
+        fixed inset-y-0 left-0 z-40 w-64
+        bg-gradient-to-b from-slate-900 to-slate-800
+        text-slate-200 p-5
+        transform -translate-x-full md:translate-x-0
+        transition-transform duration-300
+    "
+>
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-300">
+            Admin Sekolah
+        </h2>
 
-        <!-- LOGO / TITLE -->
-        <div class="flex items-center justify-between mb-6">
-            <h2 id="sidebarTitle"
-                class="text-sm font-semibold tracking-wide uppercase text-slate-300">
-                Admin Sekolah
-            </h2>
+        <!-- CLOSE MOBILE -->
+        <button class="md:hidden text-xl" onclick="closeSidebar()">✕</button>
+    </div>
 
-            <!-- TOGGLE BUTTON -->
-            <button onclick="toggleSidebar()"
-                    class="text-slate-300 hover:text-white">
-                <!-- icon menu -->
-                ☰
-            </button>
-        </div>
+    {{-- MENU --}}
+    <nav class="space-y-1 text-sm">
+        @php
+            $menus = [
+                ['📊','Dashboard','school.dashboard','school-admin/dashboard*'],
+                ['🏫','Profil Sekolah','school.profile','school-admin/profile*'],
+                ['👨‍🎓','Siswa','school.students.index','school-admin/students*'],
+                ['🪪','Kartu Ujian','school.exam-cards.index','exam-cards.*'],
+                ['📝','Ujian','school.exams.index','school-admin/exams*'],
+                ['📈','Laporan Nilai','school.reports.index','school-admin/reports*'],
+            ];
+        @endphp
 
-        <!-- MENU -->
-        <nav class="space-y-1 text-sm">
-
-            <a href="{{ route('school.dashboard') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('school-admin/dashboard*')
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-slate-700' }}">
-                <span>📊</span>
-                <span class="menu-text">Dashboard</span>
-            </a>
-
-            <a href="{{ route('school.profile') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('school-admin/profile*')
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-slate-700' }}">
-                <span>🏫</span>
-                <span class="menu-text">Profil Sekolah</span>
-            </a>
-
-            <a href="{{ route('school.students.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('school-admin/students*')
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-slate-700' }}">
-                <span>👨‍🎓</span>
-                <span class="menu-text">Siswa</span>
-            </a>
-
-            <a href="{{ route('school.exam-cards.index') }}"
-            class="flex items-center gap-3 px-3 py-2 rounded
-            {{ request()->routeIs('exam-cards.*')
+        @foreach($menus as [$icon,$label,$route,$active])
+            <a href="{{ route($route) }}"
+               class="flex items-center gap-3 px-3 py-2 rounded transition
+               {{ request()->is($active) || request()->routeIs($active)
                     ? 'bg-indigo-600 text-white'
                     : 'hover:bg-slate-700 text-slate-200' }}">
-                <span>🪪</span>
-                <span class="menu-text">Kartu Ujian</span>
+                <span>{{ $icon }}</span>
+                <span>{{ $label }}</span>
             </a>
+        @endforeach
+    </nav>
 
+    {{-- LOGOUT --}}
+    <form method="POST" action="{{ route('logout') }}" class="mt-8">
+        @csrf
+        <button class="w-full px-3 py-2 rounded hover:bg-red-600">
+            🚪 Logout
+        </button>
+    </form>
+</aside>
 
-            <a href="{{ route('school.exams.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('school-admin/exams*')
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-slate-700' }}">
-                <span>📝</span>
-                <span class="menu-text">Ujian</span>
-            </a>
+<!-- OVERLAY MOBILE -->
+<div id="overlay"
+     class="fixed inset-0 bg-black/40 z-30 hidden md:hidden"
+     onclick="closeSidebar()"></div>
 
-            <a href="{{ route('school.reports.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('school-admin/reports*')
-                    ? 'bg-indigo-600 text-white'
-                    : 'hover:bg-slate-700' }}">
-                <span>📈</span>
-                <span class="menu-text">Laporan Nilai</span>
-            </a>
+<!-- ================= TOPBAR ================= -->
+<header
+    class="
+        fixed top-0 left-0 md:left-64 right-0 z-20
+        h-14 bg-white shadow-sm
+        flex items-center justify-between px-4
+    "
+>
+    <button onclick="openSidebar()" class="md:hidden text-xl text-gray-700">
+        ☰
+    </button>
 
-        </nav>
+    <div class="text-sm text-gray-600">
+        Sekolah :
+        <strong class="text-gray-800">
+            {{ auth()->user()->school->name ?? 'CBT Sekolah' }}
+        </strong>
+    </div>
 
-        <!-- LOGOUT -->
-        <form method="POST" action="{{ route('logout') }}" class="mt-8">
-            @csrf
-            <button
-                class="flex items-center gap-3 w-full px-3 py-2 rounded
-                       hover:bg-red-600 hover:text-white">
-                <span>🚪</span>
-                <span class="menu-text">Logout</span>
-            </button>
-        </form>
-    </aside>
+    <div class="hidden sm:block text-xs text-gray-400">
+        {{ auth()->user()->email }}
+    </div>
+</header>
 
-    <!-- CONTENT -->
-    <main class="flex-1 p-6 transition-all duration-300">
+<!-- ================= CONTENT ================= -->
+<main
+    class="
+        absolute top-14 left-0 md:left-64 right-0 bottom-0
+        overflow-y-auto
+        p-6
+    "
+>
+    @yield('content')
+</main>
 
-        <!-- TOP BAR -->
-        <div class="mb-6 bg-white rounded-xl shadow-sm p-4 flex justify-between items-center">
-            <div class="text-sm text-gray-600">
-                Sekolah :
-                <strong class="text-gray-800">
-                    {{ auth()->user()->school->name ?? 'CBT Sekolah' }}
-                </strong>
-            </div>
-
-            <div class="text-xs text-gray-400">
-                {{ auth()->user()->email }}
-            </div>
-        </div>
-
-
-        @yield('content')
-    </main>
-</div>
-
-<!-- SIDEBAR TOGGLE SCRIPT -->
+<!-- ================= SCRIPT ================= -->
 <script>
-    let collapsed = false;
-
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const texts = document.querySelectorAll('.menu-text');
-        const title = document.getElementById('sidebarTitle');
-
-        collapsed = !collapsed;
-
-        if (collapsed) {
-            sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
-            title.classList.add('hidden');
-            texts.forEach(t => t.classList.add('hidden'));
-        } else {
-            sidebar.classList.add('w-64');
-            sidebar.classList.remove('w-20');
-            title.classList.remove('hidden');
-            texts.forEach(t => t.classList.remove('hidden'));
-        }
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
     }
+
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    }
+
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
 </script>
 
 </body>

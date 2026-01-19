@@ -2,77 +2,109 @@
 
 @section('content')
 
-<div class="bg-white rounded-xl shadow p-6">
+{{-- ================= HEADER ================= --}}
+<div class="mb-6">
+    <h1 class="text-xl font-semibold">Laporan Nilai</h1>
+    <p class="text-sm text-slate-500">
+        Rekap hasil ujian siswa.
+    </p>
+</div>
 
-    <h2 class="text-lg font-semibold mb-4">Laporan Nilai</h2>
+{{-- ================= FILTER CARD ================= --}}
+<div class="bg-white rounded-xl shadow-sm p-5 mb-6">
 
-    {{-- FILTER --}}
-    <form method="GET" class="flex gap-4 mb-4 flex-wrap">
+    <form method="GET"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-        <select name="exam_id" class="border rounded px-3 py-2">
-            <option value="">Semua Ujian</option>
-            @foreach($exams as $exam)
-                <option value="{{ $exam->id }}"
-                    {{ $examId == $exam->id ? 'selected' : '' }}>
-                    {{ $exam->subject }}
-                </option>
-            @endforeach
-        </select>
+        {{-- UJIAN --}}
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+                Ujian
+            </label>
+            <select name="exam_id"
+                    class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">Semua Ujian</option>
+                @foreach($exams as $exam)
+                    <option value="{{ $exam->id }}"
+                        {{ $examId == $exam->id ? 'selected' : '' }}>
+                        {{ $exam->subject }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-        <select name="class" class="border rounded px-3 py-2">
-            <option value="">Semua Kelas</option>
-            @foreach($classes as $c)
-                <option value="{{ $c }}"
-                    {{ $class == $c ? 'selected' : '' }}>
-                    {{ $c }}
-                </option>
-            @endforeach
-        </select>
+        {{-- KELAS --}}
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+                Kelas
+            </label>
+            <select name="class"
+                    class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">Semua Kelas</option>
+                @foreach($classes as $c)
+                    <option value="{{ $c }}"
+                        {{ $class == $c ? 'selected' : '' }}>
+                        {{ $c }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-        <button class="bg-indigo-600 text-white px-4 py-2 rounded">
-            Filter
-        </button>
+        {{-- BUTTON FILTER --}}
+        <div class="flex items-end">
+            <button
+                class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm
+                       hover:bg-indigo-700">
+                Filter
+            </button>
+        </div>
 
-        <a href="{{ route('school.reports.export', request()->query()) }}"
-        class="bg-green-600 text-white px-4 py-2 rounded">
-            Export Excel
-        </a>
+        {{-- EXPORT --}}
+        <div class="flex items-end">
+            <a href="{{ route('school.reports.export', request()->query()) }}"
+               class="w-full text-center bg-green-600 text-white px-4 py-2 rounded-lg text-sm
+                      hover:bg-green-700">
+                Export Excel
+            </a>
+        </div>
+
     </form>
+</div>
 
-    {{-- TABLE --}}
-    <div class="overflow-x-auto">
-        <table class="w-full border-collapse">
-            <thead class="bg-gray-100">
-                <tr>
-                    <th class="p-2 border">Nama</th>
-                    <th class="p-2 border">Kelas</th>
-                    <th class="p-2 border">Ujian</th>
-                    <th class="p-2 border">Nilai</th>
-                    <th class="p-2 border">Waktu</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($sessions as $s)
-                <tr class="text-center">
-                    <td class="border p-2">{{ $s->student->name }}</td>
-                    <td class="border p-2">{{ $s->student->class }}</td>
-                    <td class="border p-2">{{ $s->exam->subject }}</td>
-                    <td class="border p-2 font-semibold">{{ $s->score }}</td>
-                    <td class="border p-2 text-sm">
+{{-- ================= TABLE ================= --}}
+<div class="bg-white rounded-xl shadow-sm overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="bg-slate-100 text-slate-600">
+            <tr>
+                <th class="px-4 py-3 text-left">Nama</th>
+                <th class="px-4 py-3 text-left">Kelas</th>
+                <th class="px-4 py-3 text-left">Ujian</th>
+                <th class="px-4 py-3 text-center">Nilai</th>
+                <th class="px-4 py-3 text-left hidden sm:table-cell">Waktu</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($sessions as $s)
+                <tr class="border-t hover:bg-slate-50">
+                    <td class="px-4 py-3">{{ $s->student->name }}</td>
+                    <td class="px-4 py-3">{{ $s->student->class }}</td>
+                    <td class="px-4 py-3">{{ $s->exam->subject }}</td>
+                    <td class="px-4 py-3 text-center font-semibold">
+                        {{ $s->score }}
+                    </td>
+                    <td class="px-4 py-3 hidden sm:table-cell text-sm text-slate-500">
                         {{ $s->submitted_at->format('d-m-Y H:i') }}
                     </td>
                 </tr>
-                @empty
+            @empty
                 <tr>
-                    <td colspan="5" class="text-center p-4 text-gray-500">
+                    <td colspan="5" class="text-center py-6 text-slate-400">
                         Tidak ada data
                     </td>
                 </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
+            @endforelse
+        </tbody>
+    </table>
 </div>
 
 @endsection
