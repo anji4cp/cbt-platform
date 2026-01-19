@@ -23,7 +23,6 @@
                 Super Admin
             </h2>
 
-            <!-- TOGGLE -->
             <button onclick="toggleSidebar()"
                     class="text-slate-300 hover:text-white text-lg">
                 ☰
@@ -33,27 +32,30 @@
         <!-- MENU -->
         <nav class="space-y-1 text-sm">
 
-            <a href="{{ url('/super-admin/dashboard') }}"
+            {{-- DASHBOARD --}}
+            <a href="{{ route('superadmin.dashboard') }}"
                class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('super-admin/dashboard*')
+               {{ request()->routeIs('superadmin.dashboard')
                     ? 'bg-indigo-600 text-white'
                     : 'hover:bg-slate-700' }}">
                 <span>📊</span>
                 <span class="menu-text">Dashboard</span>
             </a>
 
-            <a href="{{ route('schools.index') }}"
+            {{-- SEKOLAH --}}
+            <a href="{{ route('superadmin.schools.index') }}"
                class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('super-admin/schools*')
+               {{ request()->routeIs('superadmin.schools.*')
                     ? 'bg-indigo-600 text-white'
                     : 'hover:bg-slate-700' }}">
                 <span>🏫</span>
                 <span class="menu-text">Manajemen Sekolah</span>
             </a>
 
-            <a href="{{ route('super.monitoring') }}"
+            {{-- MONITORING --}}
+            <a href="{{ route('superadmin.monitoring') }}"
                class="flex items-center gap-3 px-3 py-2 rounded
-               {{ request()->is('super-admin/monitoring*')
+               {{ request()->routeIs('superadmin.monitoring')
                     ? 'bg-indigo-600 text-white'
                     : 'hover:bg-slate-700' }}">
                 <span>📡</span>
@@ -108,13 +110,11 @@
         collapsed = !collapsed;
 
         if (collapsed) {
-            sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
+            sidebar.classList.replace('w-64', 'w-20');
             title.classList.add('hidden');
             texts.forEach(t => t.classList.add('hidden'));
         } else {
-            sidebar.classList.add('w-64');
-            sidebar.classList.remove('w-20');
+            sidebar.classList.replace('w-20', 'w-64');
             title.classList.remove('hidden');
             texts.forEach(t => t.classList.remove('hidden'));
         }

@@ -12,16 +12,18 @@ class ExamSession extends Model
         'exam_package_id',
         'answers',
         'started_at',
+        'ends_at',          // 🔥 WAJIB
         'submitted_at',
         'score',
         'device_id',
+        'token_verified',   // 🔥 WAJIB
     ];
 
     protected $casts = [
-        'answers' => 'array',
-        'started_at' => 'datetime',
-        'submitted_at' => 'datetime',
-        'ends_at'    => 'datetime',
+        'answers'       => 'array',
+        'started_at'    => 'datetime',
+        'ends_at'       => 'datetime',
+        'submitted_at'  => 'datetime',
     ];
     
     public function student()
@@ -34,4 +36,3 @@ class ExamSession extends Model
         return $this->belongsTo(\App\Models\Exam::class);
     }
 }
-

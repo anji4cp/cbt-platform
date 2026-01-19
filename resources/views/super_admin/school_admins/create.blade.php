@@ -22,7 +22,7 @@
     @endif
 
     {{-- FORM --}}
-    <form method="POST" action="{{ route('schools.admin.store', $school) }}" class="space-y-4">
+    <form method="POST" action="{{ route('superadmin.schools.admin.store', $school) }}" class="space-y-4">
         @csrf
 
         {{-- NAMA --}}
@@ -68,7 +68,7 @@
 
         {{-- ACTION --}}
         <div class="flex justify-end gap-3 pt-4">
-            <a href="{{ route('schools.index') }}"
+            <a href="{{ route('superadmin.schools.index') }}"
                class="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50">
                 Batal
             </a>

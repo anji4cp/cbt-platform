@@ -31,7 +31,7 @@ class SchoolAdminController extends Controller
             'school_id' => $school->id, // ← WAJIB
         ]);
 
-        return redirect()->route('schools.index')
+        return redirect()->route('superadmin.schools.index')
         ->with('success', 'Admin Sekolah berhasil ditambahkan');
     }
 }

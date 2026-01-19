@@ -1,138 +1,63 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Token Ujian</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+@extends('layouts.student')
 
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #2563eb, #1e3a8a);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        }
+@section('content')
 
-        .card {
-            background: #fff;
-            width: 100%;
-            max-width: 380px;
-            padding: 28px;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,.2);
-        }
+<div class="flex items-center justify-center w-full">
 
-        .title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-md overflow-hidden">
 
-        .subtitle {
-            text-align: center;
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 24px;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 1px;
-            border-radius: 10px;
-            border: 1px solid #d1d5db;
-            font-size: 15px;
-            margin-top: 6px;
-            outline: none;
-            letter-spacing: 2px;
-            text-align: center;
-        }
-
-        input:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-        }
-
-        button {
-            width: 100%;
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            background: #2563eb;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            font-size: 13px;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 14px;
-            text-align: center;
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-            margin-top: 18px;
-        }
-    </style>
-</head>
-<body>
-
-<div class="card">
-
-    <div class="title">Token Ujian</div>
-    <div class="subtitle">
-        Masukkan token untuk mulai mengerjakan ujian
-    </div>
-
-    @error('token')
-        <div class="error">
-            {{ $message }}
+        {{-- HEADER --}}
+        <div class="border-b px-8 py-6 bg-slate-50 text-center">
+            <h1 class="text-xl font-semibold text-gray-800">
+                Token Ujian
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                Masukkan token untuk mulai ujian
+            </p>
         </div>
-    @enderror
 
-    <form method="POST" action="{{ route('student.exam.token', $exam->id) }}">
-        @csrf
+        {{-- ERROR --}}
+        @if($errors->any())
+            <div class="mx-8 mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm text-center">
+                {{ $errors->first() }}
+            </div>
+        @endif
 
-        <label>Token Ujian</label>
-        <input
-            type="text"
-            name="token"
-            placeholder="••••••"
-            required
-            autofocus>
+        {{-- FORM --}}
+        <form method="POST"
+              action="{{ route('student.exam.token', $exam->id) }}"
+              class="px-8 py-6 space-y-6">
+            @csrf
 
-        <button type="submit">
-            Mulai Ujian
-        </button>
-    </form>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1 text-center">
+                    Token Ujian
+                </label>
 
-    <div class="footer">
-        © {{ date('Y') }} CBT Platform
+                <input
+                    type="text"
+                    name="token"
+                    placeholder="••••••"
+                    required
+                    autofocus
+                    class="w-full text-center tracking-widest rounded-lg border px-3 py-2
+                           focus:ring-2 focus:ring-indigo-200">
+            </div>
+
+            <button type="submit"
+                    class="w-full text-white py-2 rounded-lg font-semibold transition"
+                    style="background: {{ session('school_brand.theme') ?? '#2563eb' }}">
+                Mulai Ujian
+            </button>
+        </form>
+
+        {{-- FOOTER --}}
+        <div class="px-8 pb-6 text-center text-xs text-gray-400">
+            CBT Sekolah • Sistem Ujian Berbasis Komputer
+        </div>
+
     </div>
 
 </div>
 
-</body>
-</html>
+@endsection

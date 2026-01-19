@@ -12,6 +12,27 @@
 
 <div class="bg-white rounded-xl shadow overflow-x-auto">
 
+{{-- SUCCESS --}}
+@if(session('success'))
+    <div class="mb-4 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800">
+        <div class="text-xl">✅</div>
+        <div class="text-sm font-medium">
+            {{ session('success') }}
+        </div>
+    </div>
+@endif
+
+{{-- ERROR --}}
+@if(session('error'))
+    <div class="mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
+        <div class="text-xl">⚠️</div>
+        <div class="text-sm font-medium">
+            {{ session('error') }}
+        </div>
+    </div>
+@endif
+
+
 <table class="w-full text-sm">
     <thead class="bg-slate-100 text-slate-600">
         <tr>

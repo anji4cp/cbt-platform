@@ -3,8 +3,17 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+
+// ===== ADMIN / GLOBAL =====
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\SchoolScopeMiddleware;
+use App\Http\Middleware\EnsureSchoolActive;
+
+// ===== STUDENT =====
+use App\Http\Middleware\StudentAuthMiddleware;
+use App\Http\Middleware\StudentSchoolContext;
+use App\Http\Middleware\EnsureStudentSchoolActive;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,16 +24,24 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
 
         $middleware->alias([
-            'student.auth' => \App\Http\Middleware\StudentAuthMiddleware::class,
+
+            // ===== AUTH & ROLE =====
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'student.auth' => \App\Http\Middleware\StudentAuthMiddleware::class,
-            'student.school' => \App\Http\Middleware\StudentSchoolContext::class,
+
+            // ===== SCHOOL CONTEXT =====
+            'student.school.context' => \App\Http\Middleware\StudentSchoolContext::class,
+
+            // ===== SCHOOL STATUS =====
+            'student.school.active' => \App\Http\Middleware\EnsureStudentSchoolActive::class,
+
+            // ===== ADMIN =====
             'school.scope' => \App\Http\Middleware\SchoolScopeMiddleware::class,
-            'student.auth' => \App\Http\Middleware\StudentAuthMiddleware::class,
-            'student.school' => \App\Http\Middleware\StudentSchoolContext::class,
             'ensure.school.active' => \App\Http\Middleware\EnsureSchoolActive::class,
+
         ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions) {
 
         $exceptions->renderable(function (

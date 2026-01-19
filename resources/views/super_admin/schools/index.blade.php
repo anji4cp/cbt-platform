@@ -6,7 +6,7 @@
         Daftar Sekolah
     </h1>
 
-    <a href="{{ route('schools.create') }}"
+    <a href="{{ route('superadmin.schools.create') }}"
        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow">
         + Tambah Sekolah
     </a>
@@ -29,7 +29,7 @@
                 <th class="px-4 py-3 text-center">School ID</th>
                 <th class="px-4 py-3 text-center">Email</th>
                 <th class="px-4 py-3 text-center">Status</th>
-                <th class="px-4 py-2">Expired at</th>
+                <th class="px-4 py-2 text-center">Expired at</th>
                 <th class="px-4 py-3 text-center">Aksi</th>
             </tr>
         </thead>
@@ -55,7 +55,6 @@
                         <span class="text-gray-400 italic">Belum ada admin</span>
                     @endif
                 </td>
-
 
                 <td class="px-4 py-3 text-center">
                     <span class="px-2 py-1 rounded text-xs font-semibold
@@ -86,28 +85,27 @@
                             @endif
                         </div>
                     @endif
-
                 </td>
 
                 <td class="px-4 py-2 text-center">
                     <div class="flex justify-center gap-2">
 
                         {{-- EDIT --}}
-                        <a href="{{ route('schools.edit', $school) }}"
-                        class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
+                        <a href="{{ route('superadmin.schools.edit', $school) }}"
+                           class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200">
                             Edit
                         </a>
 
                         {{-- BUAT ADMIN --}}
-                        <a href="{{ route('schools.admin.create', $school) }}"
-                        class="px-3 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
+                        <a href="{{ route('superadmin.schools.admin.create', $school) }}"
+                           class="px-3 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200">
                             Admin
                         </a>
 
                         {{-- HAPUS --}}
                         <form method="POST"
-                            action="{{ route('schools.destroy', $school) }}"
-                            onsubmit="return confirm('⚠️ Yakin hapus sekolah ini?\nSemua data akan TERHAPUS permanen!')">
+                              action="{{ route('superadmin.schools.destroy', $school) }}"
+                              onsubmit="return confirm('⚠️ Yakin hapus sekolah ini?\nSemua data akan TERHAPUS permanen!')">
                             @csrf
                             @method('DELETE')
 
@@ -119,11 +117,10 @@
 
                     </div>
                 </td>
-
             </tr>
             @empty
             <tr>
-                <td colspan="4" class="text-center py-6 text-gray-400">
+                <td colspan="6" class="text-center py-6 text-gray-400">
                     Belum ada data sekolah
                 </td>
             </tr>

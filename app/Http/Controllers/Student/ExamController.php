@@ -165,38 +165,50 @@ class ExamController extends Controller
             return back()->withErrors(['token' => 'Token ujian salah']);
         }
 
-        ExamSession::updateOrCreate(
-            [
-                'exam_id'    => $exam->id,
-                'student_id' => auth()->id(),
-            ],
-            [
-                'token_verified' => true
-            ]
-        );
+        $student = Auth::guard('student')->user();
+
+        // 🔥 HAPUS SEMUA SESSION LAMA (INTI FIX)
+        ExamSession::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->delete();
+
+        // 🔥 BUAT SESSION BARU
+        ExamSession::create([
+            'exam_id'        => $exam->id,
+            'student_id'     => $student->id,
+            'started_at'     => now(),
+            'ends_at'        => now()->addMinutes($exam->duration_minutes),
+            'answers'        => [],
+            'score'          => null,
+            'submitted_at'   => null,
+            'device_id'      => null,
+            'token_verified' => true,
+        ]);
 
         return redirect()->route('student.exam.real', $exam->id);
     }
-
-
 
     
     /* =========================
        STEP 4: MULAI UJIAN (FINAL FIX)
     ========================== */
-    public function start($id)
+    public function start(Exam $exam)
     {
+        // abort(500, 'DEBUG: MASUK start()');
         $student = Auth::guard('student')->user();
         abort_if(! $student, 403);
 
-        $exam = Exam::findOrFail($id);
+        // ambil session ujian siswa
+        $session = ExamSession::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->first();
 
-        // pakai token → ke form token
-        if ($exam->token) {
+        // 🔐 jika ujian pakai token & BELUM diverifikasi → ke form token
+        if ($exam->token && (! $session || ! $session->token_verified)) {
             return redirect()->route('student.exam.token.form', $exam->id);
         }
 
-        // tidak pakai token → langsung ujian
+        // ✅ token tidak ada ATAU sudah diverifikasi → masuk ujian
         return redirect()->route('student.exam.real', $exam->id);
     }
 
@@ -206,24 +218,24 @@ class ExamController extends Controller
         $student = Auth::guard('student')->user();
         abort_if(! $student, 403);
 
-        $school = $student->school;
+        /* ===============================
+        VALIDASI SEKOLAH
+        =============================== */
+        $schoolId = session('student_school_id');
+        $school = School::find($schoolId);
 
         if (! $school) {
             Auth::guard('student')->logout();
-
-            return redirect('/student/login')
-                ->withErrors([
-                    'username' => 'Sekolah tidak ditemukan. Hubungi admin.'
-                ]);
+            return redirect('/student/login')->withErrors([
+                'username' => 'Session sekolah tidak valid. Silakan pilih sekolah lagi.'
+            ]);
         }
 
         if ($school->status === 'suspend') {
             Auth::guard('student')->logout();
-
-            return redirect('/student/login')
-                ->withErrors([
-                    'username' => 'Sekolah sedang disuspend.'
-                ]);
+            return redirect('/student/login')->withErrors([
+                'username' => 'Sekolah sedang disuspend.'
+            ]);
         }
 
         if (
@@ -231,56 +243,42 @@ class ExamController extends Controller
             ($school->expired_at && now()->greaterThan($school->expired_at))
         ) {
             Auth::guard('student')->logout();
-
-            return redirect('/student/login')
-                ->withErrors([
-                    'username' => 'Akses ujian telah berakhir.'
-                ]);
-        }
-
-
-        abort_if($exam->school_id !== $student->school_id, 403);
-        abort_if(! $exam->is_active, 403);
-
-        // Cek kelas
-        $allowed = ExamClass::where('exam_id', $exam->id)
-            ->pluck('class_name')
-            ->toArray();
-
-        abort_if(! in_array($student->class, $allowed), 403);
-
-        // Ambil session (PINDAHKAN KE SINI)
-        $session = ExamSession::where('exam_id', $exam->id)
-            ->where('student_id', $student->id)
-            ->first();
-
-        // ❌ JIKA SUDAH SUBMIT → TOLAK MASUK
-        if ($session && $session->submitted_at) {
-            return redirect()
-                ->route('student.exams')
-                ->with('error', 'Ujian sudah dikumpulkan dan tidak bisa dibuka kembali.');
-        }
-
-        // Paket soal
-        $packages = ExamPackage::where('exam_id', $exam->id)->get();
-        abort_if($packages->isEmpty(), 404);
-
-        // BUAT SESSION JIKA BELUM ADA
-        if (! $session) {
-            $now = now();
-            $random = $packages->random();
-
-            $session = ExamSession::create([
-                'exam_id'         => $exam->id,
-                'student_id'      => $student->id,
-                'exam_package_id' => $random->id,
-                'started_at'      => $now,
-                'ends_at'         => $now->copy()->addMinutes($exam->duration_minutes),
+            return redirect('/student/login')->withErrors([
+                'username' => 'Akses ujian telah berakhir.'
             ]);
         }
 
-        // AMANKAN ends_at (DATA LAMA)
-        if (is_null($session->ends_at)) {
+        /* ===============================
+        VALIDASI UJIAN
+        =============================== */
+        abort_if($exam->school_id !== $student->school_id, 403);
+        abort_if(! $exam->is_active, 403);
+
+        $allowedClasses = ExamClass::where('exam_id', $exam->id)
+            ->pluck('class_name')
+            ->toArray();
+
+        abort_if(! in_array($student->class, $allowedClasses), 403);
+
+        /* ===============================
+        AMBIL SESSION AKTIF
+        =============================== */
+        $session = ExamSession::where('exam_id', $exam->id)
+            ->where('student_id', $student->id)
+            ->orderByDesc('started_at')
+            ->first();
+
+        if ($session->submitted_at) {
+            return redirect()
+                ->route('student.exams')
+                ->with('error', 'Ujian sudah selesai.');
+        }
+
+
+        /* ===============================
+        🔒 PASTIKAN ends_at ADA (WAJIB)
+        =============================== */
+        if (! $session->ends_at) {
             $start = $session->started_at ?? $session->created_at ?? now();
 
             $session->ends_at = Carbon::parse($start)
@@ -289,28 +287,54 @@ class ExamController extends Controller
             $session->save();
         }
 
-        // Ambil paket
-        $package = ExamPackage::findOrFail($session->exam_package_id);
+        /* ===============================
+        🔥 AUTO SUBMIT SERVER
+        =============================== */
+        $this->forceSubmitIfExpired($session, $exam);
 
-        // HITUNG SISA WAKTU (ANTI RESET)
-        $nowTs = now()->timestamp;
-        $endTs = Carbon::parse($session->ends_at)->timestamp;
-
-        if ($nowTs >= $endTs) {
+        if ($session->submitted_at) {
             return redirect()
                 ->route('student.exams')
-                ->with('error', 'Waktu ujian telah habis');
+                ->with('error', 'Waktu ujian telah habis.');
         }
 
-        $remaining = max(0, $endTs - $nowTs);
+        /* ===============================
+        PAKET SOAL
+        =============================== */
+        $packages = ExamPackage::where('exam_id', $exam->id)->get();
+        abort_if($packages->isEmpty(), 404);
+
+        $session = ExamSession::updateOrCreate(
+            [
+                'exam_id'    => $exam->id,
+                'student_id' => $student->id,
+            ],
+            [
+                'exam_package_id' => $session->exam_package_id ?? $packages->random()->id,
+                'started_at'      => $session->started_at ?? now(),
+                'ends_at'         => $session->ends_at,
+            ]
+        );
+
+        $package = ExamPackage::findOrFail($session->exam_package_id);
+
+        /* ===============================
+        HITUNG SISA WAKTU (UX ONLY)
+        =============================== */
+        $remaining = max(
+            0,
+            Carbon::parse($session->ends_at)->timestamp - now()->timestamp
+        );
 
         return view('student.exam', [
             'exam'      => $exam,
             'session'   => $session,
             'package'   => $package,
             'remaining' => (int) $remaining,
+            'minSubmit' => (int) $exam->min_submit_minutes * 60, // 🔥 detik
         ]);
     }
+
 
 
 
@@ -321,60 +345,93 @@ class ExamController extends Controller
     {
         $student = Auth::guard('student')->user();
 
+        // ===============================
+        // AMBIL SESSION
+        // ===============================
         $session = ExamSession::where('exam_id', $exam->id)
             ->where('student_id', $student->id)
             ->firstOrFail();
 
-        // ❌ JIKA SUDAH SUBMIT → KUNCI
+        // ===============================
+        // 🔥 AUTO SUBMIT SERVER
+        // ===============================
+        $this->forceSubmitIfExpired($session, $exam);
+
         if ($session->submitted_at) {
             return response()->json(['status' => 'locked']);
         }
 
+        // ===============================
+        // TOKEN VALIDATION
+        // ===============================
         if ($exam->token && ! $session->token_verified) {
             return response()->json(['status' => 'token_required'], 403);
         }
 
+        // ===============================
+        // DEVICE LOCK
+        // ===============================
+        $deviceId = $request->input('device_id');
 
-        // =============================
-        // 🔐 DEVICE LOCK (FIX PALSU)
-        // =============================
-
-        // SIMPAN DEVICE PERTAMA KALI
-        if (empty($session->device_id)) {
-            $session->update([
-                'device_id' => $request->device_id
-            ]);
+        if (! $deviceId) {
+            return response()->json(['status' => 'device_missing'], 400);
         }
 
-        // BARU VALIDASI
-        if ($session->device_id !== $request->device_id) {
-            return response()->json([
-                'status' => 'blocked'
-            ], 403);
+        // simpan device pertama
+        if (! $session->device_id) {
+            $session->device_id = $deviceId;
+            $session->save();
         }
 
-        // =============================
-        // 💾 AUTOSAVE JAWABAN SAJA
-        // =============================
+        // validasi device
+        if ($session->device_id !== $deviceId) {
+            return response()->json(['status' => 'blocked'], 403);
+        }
 
-        $session->update([
-            'answers' => $request->input('answers', [])
+        // ===============================
+        // 💾 AUTOSAVE (ANTI KEHILANGAN)
+        // ===============================
+        $incoming = $request->input('answers');
+
+        // hanya proses jika ada data valid
+        if (is_array($incoming) && count($incoming) > 0) {
+
+            // ambil jawaban lama
+            $existing = $session->answers ?? [];
+
+            // merge: jawaban baru menimpa lama, yang lama tetap
+            $merged = array_replace($existing, $incoming);
+
+            $session->answers = $merged;
+            $session->save();
+        }
+
+        return response()->json([
+            'status' => 'saved',
+            'time'   => now()->toTimeString()
         ]);
-
-        return response()->json(['status' => 'saved']);
     }
+
+
     /* =========================
        SUBMIT
     ========================== */
     public function submit(Request $request, Exam $exam)
     {
         $student = Auth::guard('student')->user();
+        $deviceId = $request->input('device_id');
+
+        if (! $deviceId) {
+            return response()->json(['status' => 'device_missing'], 400);
+        }
 
         $session = ExamSession::where('exam_id', $exam->id)
             ->where('student_id', $student->id)
             ->firstOrFail();
 
-        // 🔒 JANGAN BOLEH SUBMIT ULANG
+        // 🔥 AUTO SUBMIT CHECK
+        $this->forceSubmitIfExpired($session, $exam);
+
         if ($session->submitted_at) {
             return response()->json(['status' => 'locked']);
         }
@@ -383,39 +440,27 @@ class ExamController extends Controller
             return response()->json(['status' => 'token_required'], 403);
         }
 
-
-        // ===============================
-        // ⏱️ VALIDASI MINIMAL WAKTU SUBMIT
-        // ===============================
         if ($exam->min_submit_minutes > 0) {
-
             $startTs = Carbon::parse($session->started_at)->timestamp;
-            $nowTs   = now()->timestamp;
+            $minTs   = $startTs + ($exam->min_submit_minutes * 60);
 
-            $minAllowedTs = $startTs + ($exam->min_submit_minutes * 60);
-
-            if ($nowTs < $minAllowedTs) {
-
-                $remain = ceil(($minAllowedTs - $nowTs) / 60);
-
+            if (now()->timestamp < $minTs) {
                 return response()->json([
                     'status'  => 'too_fast',
-                    'message' => "Jawaban baru dapat dikirim setelah {$exam->min_submit_minutes} menit.",
-                    'remain'  => $remain
+                    'message' => "Jawaban baru dapat dikirim setelah {$exam->min_submit_minutes} menit."
                 ], 403);
             }
         }
 
-        // ===== DEVICE CHECK =====
-        if ($session->device_id && $session->device_id !== $request->device_id) {
+        if (! $session->device_id) {
+            $session->device_id = $deviceId;
+            $session->save();
+        }
+
+        if ($session->device_id !== $deviceId) {
             return response()->json(['status' => 'blocked'], 403);
         }
 
-        if (! $session->device_id) {
-            $session->device_id = $request->device_id;
-        }
-
-        // ===== HITUNG NILAI =====
         $answers = $request->input('answers', []);
 
         $keys = json_decode(
@@ -433,10 +478,8 @@ class ExamController extends Controller
             }
         }
 
-        // NILAI MAX 100, TANPA KOMA
         $score = (int) floor(($correct / max(1, $total)) * 100);
 
-        // ✅ WAJIB UPDATE SEMUA
         $session->update([
             'answers'      => $answers,
             'score'        => $score,
@@ -444,11 +487,11 @@ class ExamController extends Controller
         ]);
 
         return response()->json([
-            'status' => 'submitted',
+            'status'   => 'submitted',
             'redirect' => route('student.exam.finish', $exam->id)
         ]);
-
     }
+
 
     public function finish(Exam $exam)
     {
@@ -496,5 +539,49 @@ class ExamController extends Controller
         return redirect('/student/login');
     }
 
+    private function forceSubmitIfExpired(ExamSession $session, Exam $exam)
+    {
+        // Sudah submit → STOP
+        if ($session->submitted_at) {
+            return;
+        }
+
+        // 🔒 ends_at WAJIB ADA
+        if (! $session->ends_at) {
+            return;
+        }
+
+        // Belum habis waktu → STOP
+        if (now()->lessThan(Carbon::parse($session->ends_at))) {
+            return;
+        }
+
+        // ===============================
+        // ⏱️ AUTO SUBMIT
+        // ===============================
+        $answers = $session->answers ?? [];
+
+        $keys = json_decode(
+            ExamPackage::findOrFail($session->exam_package_id)->answer_key,
+            true
+        );
+
+        $total = count($keys);
+        $correct = 0;
+
+        foreach ($keys as $i => $key) {
+            $no = $i + 1;
+            if (($answers[$no] ?? null) === $key) {
+                $correct++;
+            }
+        }
+
+        $score = (int) floor(($correct / max(1, $total)) * 100);
+
+        $session->update([
+            'score'        => $score,
+            'submitted_at' => now(),
+        ]);
+    }
 
 }

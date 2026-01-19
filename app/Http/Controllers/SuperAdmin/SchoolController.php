@@ -78,7 +78,7 @@ class SchoolController extends Controller
         School::create($data);
 
         return redirect()
-            ->route('schools.index')
+            ->route('superadmin.schools.index')
             ->with('success', 'Sekolah berhasil ditambahkan');
     }
 
@@ -140,7 +140,7 @@ class SchoolController extends Controller
         $school->save();
 
         return redirect()
-            ->route('schools.index')
+            ->route('superadmin.schools.index')
             ->with('success', 'Sekolah berhasil diperbarui');
     }
 
@@ -152,7 +152,7 @@ class SchoolController extends Controller
         $school->delete();
 
         return redirect()
-            ->route('schools.index')
+            ->route('superadmin.schools.index')
             ->with('success', 'Sekolah dihapus');
     }
 }

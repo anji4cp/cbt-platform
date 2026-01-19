@@ -9,8 +9,9 @@ class StudentSchoolContext
 {
     public function handle(Request $request, Closure $next)
     {
-        // wajib sudah pilih server / sekolah
-        if (! session()->has('school_id')) {
+        
+        // ✅ WAJIB pakai key yang sama dengan controller
+        if (! session()->has('student_school_id')) {
             return redirect()->route('student.server.form');
         }
 

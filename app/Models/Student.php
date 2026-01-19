@@ -21,4 +21,9 @@ class Student extends Authenticatable
 ];
 
     protected $hidden = ['password'];
+
+    public function school() {
+        return $this->belongsTo(School::class);
+    }
+
 }

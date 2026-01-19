@@ -1,146 +1,68 @@
 @extends('layouts.student')
 
 @section('content')
-<style>
-    .login-wrap {
-        min-height: 70vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
 
-    .login-card {
-        width: 100%;
-        max-width: 420px;
-        background: #ffffff;
-        border-radius: 18px;
-        box-shadow: 0 20px 40px rgba(0,0,0,.08);
-        padding: 36px 32px;
-    }
+<div class="flex items-center justify-center w-full">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-md overflow-hidden">
 
-    .login-title {
-        text-align: center;
-        font-size: 22px;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 6px;
-    }
-
-    .login-sub {
-        text-align: center;
-        font-size: 13px;
-        color: #6b7280;
-        margin-bottom: 28px;
-    }
-
-    .form-group {
-        margin-bottom: 16px;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 13px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 6px;
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        font-size: 14px;
-        transition: .2s;
-    }
-
-    .form-group input:focus {
-        outline: none;
-        border-color: {{ session('school_brand.theme') ?? '#2563eb' }};
-        box-shadow: 0 0 0 3px rgba(37,99,235,.15);
-    }
-
-    .login-btn {
-        width: 100%;
-        padding: 12px;
-        border-radius: 12px;
-        border: none;
-        font-size: 15px;
-        font-weight: 700;
-        color: #fff;
-        background: {{ session('school_brand.theme') ?? '#2563eb' }};
-        cursor: pointer;
-        transition: .2s;
-    }
-
-    .login-btn:hover {
-        opacity: .9;
-        transform: translateY(-1px);
-    }
-
-    .login-error {
-        background: #fee2e2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        font-size: 13px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        margin-bottom: 16px;
-    }
-
-    .login-footer {
-        text-align: center;
-        font-size: 11px;
-        color: #9ca3af;
-        margin-top: 24px;
-    }
-</style>
-
-<div class="login-wrap">
-    <div class="login-card">
-
-        <div class="login-title">Login Siswa</div>
-        <div class="login-sub">
-            {{ session('school_brand.name') }}
+        {{-- HEADER --}}
+        <div class="border-b px-8 py-6 bg-slate-50 text-center">
+            <h1 class="text-xl font-semibold text-gray-800">
+                Login Siswa
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                {{ session('school_brand.name') }}
+            </p>
         </div>
 
-        @if($errors->any())
-            <div class="login-error">
+        {{-- ERROR --}}
+        @if ($errors->any())
+            <div class="mx-8 mt-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
                 {{ $errors->first() }}
             </div>
         @endif
 
-        <form method="POST" action="{{ route('student.login') }}">
+        {{-- FORM --}}
+        <form method="POST"
+              action="{{ route('student.login') }}"
+              class="px-8 py-6 space-y-6">
             @csrf
 
-            <div class="form-group">
-                <label>Username</label>
-                <input
-                    type="text"
-                    name="username"
-                    value="{{ old('username') }}"
-                    placeholder="Masukkan username"
-                    required>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Username
+                </label>
+                <input type="text"
+                       name="username"
+                       value="{{ old('username') }}"
+                       required
+                       autofocus
+                       class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-indigo-200">
             </div>
 
-            <div class="form-group">
-                <label>Password</label>
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Masukkan password"
-                    required>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                </label>
+                <input type="password"
+                       name="password"
+                       required
+                       class="w-full rounded-lg border px-3 py-2 focus:ring-2 focus:ring-indigo-200">
             </div>
 
-            <button type="submit" class="login-btn">
+            <button type="submit"
+                    class="w-full text-white py-2 rounded-lg font-semibold transition"
+                    style="background: {{ session('school_brand.theme') ?? '#2563eb' }}">
                 Masuk Ujian
             </button>
         </form>
 
-        <div class="login-footer">
+        {{-- FOOTER --}}
+        <div class="px-8 pb-6 text-center text-xs text-gray-400">
             CBT Sekolah • Sistem Ujian Berbasis Komputer
         </div>
 
     </div>
 </div>
+
 @endsection

@@ -3,10 +3,11 @@
 @section('content')
 
 <h1 class="text-2xl font-semibold mb-6">Tambah Sekolah</h1>
+
 <div class="flex justify-center">
 <div class="w-full max-w-xl bg-white rounded-xl shadow p-6">
 
-    <form action="{{ route('schools.store') }}" method="POST" class="space-y-5">
+    <form action="{{ route('superadmin.schools.store') }}" method="POST" class="space-y-5">
         @csrf
 
         {{-- NAMA SEKOLAH --}}
@@ -36,7 +37,7 @@
             </select>
         </div>
 
-        {{-- DURASI LANGGANAN (KHUSUS ACTIVE) --}}
+        {{-- DURASI LANGGANAN --}}
         <div class="grid grid-cols-3 gap-3">
             <div class="col-span-1">
                 <label class="block text-sm font-medium mb-1">
@@ -66,14 +67,13 @@
 
         {{-- INFO --}}
         <div class="text-sm text-gray-500 bg-slate-50 p-3 rounded">
-            • Trial otomatis aktif 7 hari  
-            <br>
+            • Trial otomatis aktif 7 hari<br>
             • Paket aktif akan dihitung dari durasi yang dipilih
         </div>
 
         {{-- ACTION --}}
         <div class="flex justify-end gap-3 pt-4">
-            <a href="{{ route('schools.index') }}"
+            <a href="{{ route('superadmin.schools.index') }}"
                class="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-100">
                 Batal
             </a>
