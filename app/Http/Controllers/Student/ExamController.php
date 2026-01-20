@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Student;
 
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamSession;
@@ -75,6 +77,28 @@ class ExamController extends Controller
             'password' => 'required',
         ]);
 
+        /* ===============================
+        RATE LIMIT (ANTI BRUTE FORCE)
+        =============================== */
+        $key = Str::lower(
+            $request->username
+            .'|school:'.session('student_school_id')
+            .'|ip:'.$request->ip()
+        );
+
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            return back()->withErrors([
+                'username' => "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik."
+            ]);
+        }
+
+        RateLimiter::hit($key, 60); // lock 60 detik jika gagal
+
+        /* ===============================
+        AMBIL DATA SISWA
+        =============================== */
         $student = Student::where('school_id', session('student_school_id'))
             ->where('username', $request->username)
             ->first();
@@ -88,7 +112,7 @@ class ExamController extends Controller
         if (! $student->is_active) {
             return back()->withErrors([
                 'username' => 'Akun Anda dinonaktifkan. Hubungi pengawas atau admin.'
-            ])->withInput();
+            ]);
         }
 
         if (! Hash::check($request->password, $student->password)) {
@@ -97,6 +121,9 @@ class ExamController extends Controller
             ])->withInput();
         }
 
+        /* ===============================
+        VALIDASI SEKOLAH
+        =============================== */
         $school = School::find(session('student_school_id'));
 
         if ($school->status === 'suspend') {
@@ -105,16 +132,25 @@ class ExamController extends Controller
             ]);
         }
 
-        if ($school->status === 'expired') {
+        if (
+            $school->status === 'expired' ||
+            ($school->expired_at && now()->greaterThan($school->expired_at))
+        ) {
             return back()->withErrors([
                 'username' => 'Akses ujian telah berakhir.'
             ]);
         }
 
+        /* ===============================
+        LOGIN SUKSES → RESET RATE LIMIT
+        =============================== */
+        RateLimiter::clear($key);
+
         Auth::guard('student')->login($student);
 
         return redirect()->route('student.exams');
     }
+
 
 
     /* =========================

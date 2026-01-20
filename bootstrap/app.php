@@ -14,6 +14,8 @@ use App\Http\Middleware\StudentAuthMiddleware;
 use App\Http\Middleware\StudentSchoolContext;
 use App\Http\Middleware\EnsureStudentSchoolActive;
 
+use Illuminate\Foundation\Http\Middleware\EncryptCookies;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -39,14 +41,59 @@ return Application::configure(basePath: dirname(__DIR__))
             'school.scope' => \App\Http\Middleware\SchoolScopeMiddleware::class,
             'ensure.school.active' => \App\Http\Middleware\EnsureSchoolActive::class,
 
+            'cbt.app' => \App\Http\Middleware\CbtAppOnly::class,
+
+        ]);
+        $middleware->encryptCookies(except: [
+            'cbt_app',
         ]);
     })
 
     ->withExceptions(function (Exceptions $exceptions) {
 
+        /*
+        |--------------------------------------------------------------------------
+        | RATE LIMIT (429) – LOGIN
+        |--------------------------------------------------------------------------
+        */
+        $exceptions->renderable(function (
+            ThrottleRequestsException $e,
+            Request $request
+        ) {
+
+            // ===============================
+            // LOGIN SISWA
+            // ===============================
+            if ($request->is('student/login')) {
+                return back()->withErrors([
+                    'username' =>
+                        'Terlalu banyak percobaan login. Tunggu 1 menit lalu coba lagi.'
+                ]);
+            }
+
+            // ===============================
+            // LOGIN ADMIN / SUPER ADMIN
+            // ===============================
+            if ($request->is('login')) {
+                return back()->withErrors([
+                    'email' =>
+                        'Terlalu banyak percobaan login. Tunggu 1 menit.'
+                ]);
+            }
+
+            // fallback default 429
+            return response()->view('errors.429', [], 429);
+        });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | 404 / NOT FOUND HANDLER (PUNYAMU)
+        |--------------------------------------------------------------------------
+        */
         $exceptions->renderable(function (
             \Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e,
-            $request
+            Request $request
         ) {
 
             // ===============================

@@ -157,7 +157,7 @@ Route::middleware([
 */
 Route::prefix('student')
     ->name('student.')
-    ->middleware(['web'])
+    ->middleware(['web','cbt.app',])
     ->group(function () {
 
         Route::get('/server', [StudentExamController::class, 'serverForm'])
@@ -178,6 +178,7 @@ Route::prefix('student')
     ->middleware([
         'web',
         'student.school.context',
+        'cbt.app',
     ])
     ->group(function () {
 
@@ -185,6 +186,7 @@ Route::prefix('student')
             ->name('login.form');
 
         Route::post('/login', [StudentExamController::class, 'login'])
+            ->middleware('throttle:student-login')
             ->name('login');
 
         Route::post('/logout', [StudentExamController::class, 'logout'])
