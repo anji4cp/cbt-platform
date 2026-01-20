@@ -53,7 +53,6 @@ Sistem ini fokus pada **keamanan ujian**, **stabilitas server**, dan **kemudahan
 - Login siswa hanya dari aplikasi resmi (APK)
 
 ### 📱 Keamanan Siswa (Anti-Cheat)
-- Device lock (1 siswa = 1 device)
 - Session terikat `device_id`
 - Autosave server-side
 - Auto-submit server-side saat waktu habis
