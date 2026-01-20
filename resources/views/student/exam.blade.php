@@ -187,23 +187,29 @@ html, body {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    /* ================= DEVICE ================= */
-    if (!localStorage.getItem('cbt_device_id')) {
-        localStorage.setItem('cbt_device_id', crypto.randomUUID());
-    }
-    const DEVICE_ID = localStorage.getItem('cbt_device_id');
 
     /* ================= TIMER (UX ONLY) ================= */
-    const timerEl = document.getElementById('timer');
+document.addEventListener('DOMContentLoaded', function () {
 
-    if (!timerEl) {
-        alert('TIMER ELEMENT TIDAK DITEMUKAN');
-        return;
+    /* ================= DEVICE (SAFE) ================= */
+    function generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random()*16|0, v = c === 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
     }
 
-    let remaining = Number({{ (int) $remaining }});
+    if (!localStorage.getItem('cbt_device_id')) {
+        localStorage.setItem('cbt_device_id', generateUUID());
+    }
+
+    const DEVICE_ID = localStorage.getItem('cbt_device_id');
+
+    /* ================= TIMER ================= */
+    const timerEl = document.getElementById('timer');
+    if (!timerEl) return;
+
+    let remaining = Number('{{ (int) ($remaining ?? 0) }}');
 
     function renderTimer() {
         const m = Math.floor(remaining / 60);
@@ -212,10 +218,17 @@ document.addEventListener('DOMContentLoaded', function () {
             String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
 
-    renderTimer(); // render awal
+    renderTimer();
 
-    setInterval(() => {
-        if (remaining > 0) remaining--;
+    const timerInterval = setInterval(() => {
+        if (remaining <= 0) {
+            clearInterval(timerInterval);
+            renderTimer();
+            submitExam(); // 🔥 AUTO SUBMIT
+            return;
+        }
+
+        remaining--;
         renderTimer();
     }, 1000);
 
@@ -243,11 +256,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     '💾 Tersimpan ' + result.time;
             }
 
-            if (result.status === 'blocked' || result.status === 'locked') {
-                alert('Sesi ujian berakhir.');
+            if (result.status === 'blocked') {
+                alert('Ujian dibuka di perangkat lain.');
                 window.location.href = '{{ route("student.exams") }}';
             }
 
+            if (result.status === 'locked') {
+                // waktu habis → arahkan ke finish
+                window.location.href = result.redirect ?? '{{ route("student.exam.finish", $exam) }}';
+            }
         })
         .catch(err => console.warn('Autosave error', err));
 

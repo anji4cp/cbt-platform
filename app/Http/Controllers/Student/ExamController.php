@@ -358,7 +358,10 @@ class ExamController extends Controller
         $this->forceSubmitIfExpired($session, $exam);
 
         if ($session->submitted_at) {
-            return response()->json(['status' => 'locked']);
+            return response()->json([
+                'status'   => 'locked',
+                'redirect' => route('student.exam.finish', $exam),
+            ]);
         }
 
         // ===============================
