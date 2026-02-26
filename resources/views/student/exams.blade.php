@@ -2,144 +2,7 @@
 
 @section('content')
 
-<style>
-    .exam-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        width: 100%;
-    }
-
-    .exam-card {
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 10px 25px rgba(0,0,0,.08);
-        overflow: hidden;
-    }
-
-    .exam-header {
-        padding: 18px 24px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #f8fafc;
-    }
-
-    .exam-header h2 {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0;
-        color: #111827;
-    }
-
-    /* ================= DESKTOP TABLE ================= */
-    .exam-table-wrapper {
-        overflow-x: auto;
-    }
-
-    .exam-table {
-        width: 100%;
-        min-width: 700px;
-        border-collapse: collapse;
-    }
-
-    .exam-table th {
-        background: #f9fafb;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: #6b7280;
-        padding: 14px 18px;
-        text-align: left;
-        white-space: nowrap;
-    }
-
-    .exam-table td {
-        padding: 16px 18px;
-        border-top: 1px solid #e5e7eb;
-        font-size: 14px;
-        color: #374151;
-    }
-
-    .exam-table tr:hover {
-        background: #f8fafc;
-    }
-
-    /* ================= MOBILE CARD ================= */
-    .exam-mobile {
-        display: none;
-        padding: 16px;
-        gap: 14px;
-    }
-
-    .exam-item {
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 16px;
-        background: #ffffff;
-    }
-
-    .exam-item h3 {
-        font-size: 15px;
-        font-weight: 600;
-        margin: 0 0 6px;
-        color: #111827;
-    }
-
-    .exam-item .meta {
-        font-size: 12px;
-        color: #6b7280;
-        margin-bottom: 12px;
-    }
-
-    .badge {
-        background: #e0e7ff;
-        color: #3730a3;
-        font-size: 12px;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-weight: 600;
-        display: inline-block;
-    }
-
-    .btn-start {
-        display: inline-block;
-        padding: 8px 18px;
-        background: var(--theme, #2563eb);
-        color: #fff;
-        font-size: 13px;
-        font-weight: 600;
-        border-radius: 999px;
-        text-decoration: none;
-        text-align: center;
-        transition: .2s;
-    }
-
-    .btn-start:hover {
-        opacity: .9;
-        transform: translateY(-1px);
-    }
-
-    /* ================= RESPONSIVE ================= */
-    @media (max-width: 640px) {
-        .exam-table-wrapper {
-            display: none;
-        }
-
-        .exam-mobile {
-            display: grid;
-        }
-
-        .exam-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 6px;
-        }
-    }
-</style>
-
-<div class="exam-container">
+<div class="exam-container max-w-6xl mx-auto w-full">
 
     {{-- FLASH --}}
     @if(session('success'))
@@ -220,4 +83,11 @@
 
     </div>
 </div>
+
+<style>
+    :root {
+        --theme: {{ session('school_brand.theme') ?? '#2563eb' }};
+    }
+</style>
+
 @endsection

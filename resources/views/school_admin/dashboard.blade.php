@@ -5,13 +5,13 @@
 {{-- ================= SERVER ID CARD ================= --}}
 <div
     class="rounded-2xl mb-6 p-5 flex flex-col sm:flex-row gap-4 items-center justify-between text-white"
-    style="background: linear-gradient(135deg, {{ auth()->user()->school->theme_color ?? '#2563eb' }}, #1e40af);"
+    style="background: linear-gradient(135deg, {{ optional(auth()->user()->school)->theme_color ?? '#2563eb' }}, #1e40af);"
 >
     {{-- LOGO --}}
     <div class="flex items-center justify-center">
-        @if(auth()->user()->school->logo)
+        @if(optional(auth()->user()->school)->logo)
             <img
-                src="{{ asset('storage/' . auth()->user()->school->logo) }}"
+                src="{{ asset('storage/' . optional(auth()->user()->school)->logo) }}"
                 class="w-16 h-16 object-cover rounded-xl bg-white p-2"
                 alt="Logo Sekolah">
         @else

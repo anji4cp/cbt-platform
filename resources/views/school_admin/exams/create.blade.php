@@ -14,10 +14,14 @@
 
     {{-- ERROR GLOBAL --}}
     @if ($errors->any())
-        <div class="m-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <ul class="list-disc pl-5 text-sm space-y-1">
+        <div class="m-6 bg-red-50 border border-red-200 p-4 rounded-lg">
+            <div class="font-semibold text-red-800 mb-2">⚠️ Terjadi kesalahan:</div>
+            <ul class="space-y-1">
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <li class="text-red-700 flex items-start text-sm">
+                        <span class="mr-2">•</span>
+                        <span>{{ $error }}</span>
+                    </li>
                 @endforeach
             </ul>
         </div>

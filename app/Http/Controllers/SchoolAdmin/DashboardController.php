@@ -90,6 +90,10 @@ class DashboardController extends Controller
                 ];
             });
 
+        // ✅ TAMBAH current_status dari accessor
+        $currentStatus = $school->current_status;
+        $expiredAt = $school->expired_at;
+
         return view('school_admin.dashboard', compact(
             'school',
             'serverId',
@@ -101,7 +105,9 @@ class DashboardController extends Controller
             'finishedSessions',
             'classes',
             'students',
-            'selectedClass'
+            'selectedClass',
+            'currentStatus',
+            'expiredAt'
         ));
     }
 

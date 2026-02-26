@@ -18,31 +18,12 @@ use App\Http\Controllers\Student\ExamController as StudentExamController;
 
 /*
 |--------------------------------------------------------------------------
-| ROOT & FALLBACK
+| ROOT & LANDING PAGE
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-
-    if (!auth()->check() && !auth()->guard('student')->check()) {
-        return redirect()->route('login');
-    }
-
-    if (auth()->guard('student')->check()) {
-        return redirect()->route('student.exams');
-    }
-
-    if (auth()->check()) {
-        if (auth()->user()->role === 'super_admin') {
-            return redirect()->route('superadmin.dashboard');
-        }
-
-        if (auth()->user()->role === 'admin_school') {
-            return redirect()->route('school.dashboard');
-        }
-    }
-
-    return redirect()->route('login');
-});
+    return view('landing');
+})->name('landing');
 
 Route::fallback(function () {
     return redirect('/');

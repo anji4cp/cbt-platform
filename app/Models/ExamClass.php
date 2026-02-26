@@ -10,4 +10,9 @@ class ExamClass extends Model
         'exam_id',
         'class_name',
     ];
+
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
+    }
 }

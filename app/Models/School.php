@@ -55,10 +55,19 @@ class School extends Model
         return null;
     }
 
-    // App\Models\School.php
     public function admins()
     {
         return $this->hasMany(User::class)->where('role', 'admin_school');
+    }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function exams()
+    {
+        return $this->hasMany(Exam::class);
     }
 
 

@@ -16,11 +16,14 @@
 
         {{-- ERROR --}}
         @if ($errors->any())
-            <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-                <div class="font-semibold mb-1">Gagal menambahkan siswa:</div>
-                <ul class="list-disc list-inside">
+            <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm">
+                <div class="font-semibold text-red-800 mb-2">⚠️ Gagal menambahkan siswa:</div>
+                <ul class="space-y-1">
                     @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        <li class="text-red-700 flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>{{ $error }}</span>
+                        </li>
                     @endforeach
                 </ul>
             </div>

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Student extends Authenticatable
@@ -22,8 +21,14 @@ class Student extends Authenticatable
 
     protected $hidden = ['password'];
 
-    public function school() {
+    public function school()
+    {
         return $this->belongsTo(School::class);
+    }
+
+    public function examSessions()
+    {
+        return $this->hasMany(ExamSession::class);
     }
 
 }

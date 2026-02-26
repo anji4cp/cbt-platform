@@ -18,4 +18,9 @@ class ExamPackage extends Model
     protected $casts = [
         'answer_key' => 'array',
     ];
+
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
+    }
 }

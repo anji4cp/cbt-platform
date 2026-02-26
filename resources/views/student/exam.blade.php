@@ -4,131 +4,7 @@
 <meta charset="UTF-8">
 <title>Ujian CBT</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-html, body {
-    margin: 0;
-    height: 100%;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #000;
-}
-
-/* LAYOUT */
-.exam-wrapper {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-}
-
-/* SOAL */
-.question-panel {
-    position: relative;
-    flex: 1;
-    background: #000;
-}
-
-.pdf-frame {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-.pdf-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 15%;
-    width: 100%;
-    background: rgba(0,0,0,0.01);
-    z-index: 10;
-}
-
-/* JAWABAN */
-.answer-panel {
-    width: 26%;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    border-left: 1px solid #e5e7eb;
-}
-
-.timer {
-    font-weight: 700;
-    font-size: 14px;
-    text-align: center;
-    padding: 12px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.answer-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    padding-bottom: 90px;
-}
-
-.answer-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-}
-
-.number {
-    width: 28px;
-    font-weight: 600;
-}
-
-.options {
-    display: flex;
-    gap: 10px;
-}
-
-.options label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 14px;
-}
-
-.submit-fixed {
-    position: sticky;
-    bottom: 0;
-    background: #fff;
-    padding: 12px;
-    border-top: 1px solid #e5e7eb;
-    text-align: center;
-}
-
-.submit-fixed button {
-    width: 90%;
-    max-width: 320px;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    background: #2563eb;
-    color: #fff;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-/* MOBILE */
-@media (max-width: 768px) {
-    .exam-wrapper {
-        flex-direction: column;
-    }
-    .question-panel {
-        height: 68vh;
-    }
-    .answer-panel {
-        width: 100%;
-        height: 35vh;
-    }
-    .answer-row {
-        justify-content: center;
-    }
-}
-</style>
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>
@@ -138,11 +14,27 @@ html, body {
     <!-- ================= SOAL ================= -->
     <div class="question-panel">
         <div class="pdf-overlay"></div>
-        <iframe
-            src="{{ str_replace('/view?usp=drive_link', '/preview', $package->pdf_url) }}"
-            class="pdf-frame"
-            sandbox="allow-scripts allow-same-origin">
-        </iframe>
+        @if($package && $package->pdf_url)
+            <iframe
+                src="{{ str_replace('/view?usp=drive_link', '/preview', $package->pdf_url) }}"
+                class="pdf-frame"
+                sandbox="allow-scripts allow-same-origin"
+                onerror="document.querySelector('.pdf-frame-error') && document.querySelector('.pdf-frame-error').style.display = 'flex'">
+            </iframe>
+            <div class="pdf-frame-error" style="display:none;">
+                <div class="error-content">
+                    <p>⚠️ File soal tidak dapat dimuat</p>
+                    <p class="text-sm">Pastikan URL PDF valid atau hubungi admin</p>
+                </div>
+            </div>
+        @else
+            <div class="pdf-frame-error">
+                <div class="error-content">
+                    <p>❌ File soal tidak ditemukan</p>
+                    <p class="text-sm">Hubungi administrator sekolah</p>
+                </div>
+            </div>
+        @endif
     </div>
 
     <!-- ================= JAWABAN ================= -->
@@ -332,5 +224,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+
+<style>
+    html, body {
+        margin: 0;
+        height: 100%;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #000;
+    }
+    
+    :root {
+        --theme: {{ session('school_brand.theme') ?? '#2563eb' }};
+    }
+</style>
+
 </body>
 </html>

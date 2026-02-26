@@ -33,6 +33,11 @@ class ExamSession extends Model
 
     public function exam()
     {
-        return $this->belongsTo(\App\Models\Exam::class);
+        return $this->belongsTo(Exam::class);
+    }
+
+    public function examPackage()
+    {
+        return $this->belongsTo(ExamPackage::class);
     }
 }
