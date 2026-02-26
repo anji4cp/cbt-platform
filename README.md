@@ -1,9 +1,20 @@
-# 🧠 CBT Platform  
+# 🧠 CBT Platform
 **Multi School Computer Based Test System**
 
 CBT Platform adalah sistem **Computer Based Test (CBT) multi-sekolah** berbasis web dan Android (APK) yang dirancang untuk pelaksanaan ujian online **aman, terkontrol, dan siap produksi**.
 
 Sistem ini fokus pada **keamanan ujian**, **stabilitas server**, dan **kemudahan operasional sekolah**.
+
+---
+
+## 📱 Download Aplikasi Android
+
+Aplikasi ujian Android tersedia di:
+- **GitHub Releases**: [cbt-secure-android/releases](https://github.com/anji4cp/cbt-secure-android/releases)
+- **Minimal Android**: 4.4 (KitKat)
+- **Ukuran**: ~10 MB
+
+> ⚠️ **Penting**: Ujian hanya dapat dilakukan melalui aplikasi Android resmi. Login siswa ditolak jika tidak berasal dari APK resmi.
 
 ---
 

@@ -373,12 +373,15 @@
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#" class="download-btn">
+                <a href="https://github.com/anji4cp/cbt-secure-android/releases" 
+                   target="_blank"
+                   class="download-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
                          alt="Download on Google Play" 
                          class="h-16 mx-auto">
                 </a>
-                <a href="#" 
+                <a href="https://github.com/anji4cp/cbt-secure-android/releases/latest" 
+                   target="_blank"
                    class="inline-flex items-center justify-center px-8 py-4 bg-white text-green-600 font-semibold rounded-xl hover:bg-green-50 transition shadow-lg">
                     📥 Download APK Langsung
                 </a>
