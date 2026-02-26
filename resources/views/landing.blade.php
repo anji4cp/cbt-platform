@@ -56,9 +56,9 @@
                            class="px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition">
                             Login
                         </a>
-                        <a href="{{ route('student.server.form') }}"
-                           class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition">
-                            Mulai Ujian
+                        <a href="#download"
+                           class="px-4 py-2 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg transition">
+                            📥 Download APK
                         </a>
                     @endauth
                 </div>
