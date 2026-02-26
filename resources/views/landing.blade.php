@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CBT Platform - Sistem Ujian Berbasis Komputer</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text x='50' y='70' font-size='60' font-weight='bold' text-anchor='middle' fill='white'>C</text></svg>">
     <style>
         .hero-gradient {
             background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
